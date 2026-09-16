@@ -1,0 +1,68 @@
+name: Siteyi yayınla (GitHub Pages)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # manuel tetikleme imkânı
+
+# Pages'e dağıtım için gereken izinler
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Aynı anda iki dağıtımın çakışmasını engelle
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  # 1) Her push'ta önce testler + gizlilik denetimi; geçmezse yayın yok
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Depoyu al
+        uses: actions/checkout@v4
+
+      - name: Node.js kur
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Testleri çalıştır (VCF ayrıştırıcı + birleştirme)
+        run: node test-vcf.mjs
+
+      - name: Gizlilik denetimi (dış istek / depolama yasağı)
+        run: |
+          node -e "
+          const h = require('fs').readFileSync('index.html', 'utf8');
+          const m = h.match(/<script>([\s\S]*?)<\/script>/);
+          new Function(m[1]); // JS sözdizimi geçerli mi
+          const yasak = /localStorage|sessionStorage|fonts\.googleapis|fetch\(|XMLHttpRequest|sendBeacon|google-analytics|googletagmanager/;
+          if (yasak.test(h)) { console.error('GİZLİLİK İHLALİ: yasak kod bulundu'); process.exit(1); }
+          if (!h.includes('Content-Security-Policy')) { console.error('CSP eksik'); process.exit(1); }
+          console.log('Gizlilik denetimi OK: dış istek yok, depolama yok, CSP aktif');
+          "
+
+  # 2) Testler geçtikten sonra Pages'e yayınla
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Depoyu al
+        uses: actions/checkout@v4
+
+      - name: Pages'i yapılandır
+        uses: actions/configure-pages@v5
+
+      - name: Siteyi yükle
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.' # tüm statik dosyalar (index.html kökte)
+
+      - name: Dağıt
+        id: deployment
+        uses: actions/deploy-pages@v4
