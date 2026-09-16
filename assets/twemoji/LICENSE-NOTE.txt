@@ -1,0 +1,10 @@
+Twemoji bayrak görselleri
+=========================
+Kaynak: https://github.com/twitter/twemoji (vv14.0.2, assets/svg)
+Lisans: CC-BY 4.0 — https://creativecommons.org/licenses/by/4.0/
+Telif: Copyright (c) Twitter, Inc and other contributors
+Dosya sayısı: 258
+Üretim: tools/fetch-twemoji.mjs — 2026-09-16
+
+Not: Bu görseller projeye GÖMÜLÜDÜR (same-origin statik dosyalar).
+Uygulama çalışırken hiçbir üçüncü taraf sunucuya istek yapmaz.
