@@ -23,9 +23,8 @@ globalThis.URL = { createObjectURL: () => '', revokeObjectURL: noop };
 globalThis.FileReader = class { readAsText() {} };
 globalThis.setTimeout = globalThis.setTimeout; // gerçek setTimeout yeterli
 
-// bayrak listesini yükle (URL stub'lendiği için düz yol kullan)
-try { new Function(readFileSync('assets/twemoji/flags.js', 'utf8'))(); }
-catch (e) { console.error('flags.js yüklenemedi:', e.message); process.exit(1); }
+// Not: Emojiler artık çalışma zamanında jsDelivr CDN'inden (twemoji v15.1.0) çekilir;
+// testler yalnızca üretilen HTML/URL'leri doğrular, ağ erişimi gerekmez.
 
 const T = new Function(code + '\n;return __test;')();
 
@@ -194,16 +193,17 @@ eq('ccToName(tr)', T.ccToName('tr'), '1f1f9-1f1f7');
 eq('nameToCc ters', T.nameToCc('1f1f9-1f1f7'), 'tr');
 eq('round-trip de', T.nameToCc(T.ccToName('de')), 'de');
 
-console.log('\n[15] flagForPhone — yalnızca indirilmiş bayraklar');
-eq('tr bayrağı var', T.flagForPhone('05321112233'), '1f1f9-1f1f7');
-eq('us bayrağı var', T.flagForPhone('+14155551234'), '1f1fa-1f1f8');
-eq('de bayrağı var', T.flagForPhone('+491711234567'), '1f1e9-1f1ea');
+console.log('\n[15] flagForPhone + phoneListHtml — numara yanında bayrak');
+eq('tr bayrağı', T.flagForPhone('05321112233'), '1f1f9-1f1f7');
+eq('us bayrağı', T.flagForPhone('+14155551234'), '1f1fa-1f1f8');
+eq('de bayrağı', T.flagForPhone('+491711234567'), '1f1e9-1f1ea');
 {
-  const flags = globalThis.TWEMOJI_FLAGS || [];
-  eq('bayrak havuzu 258 dosya', flags.length, 258);
-  eq('havuzda tr', flags.includes(T.ccToName('tr')), true);
-  eq('havuzda jp', flags.includes(T.ccToName('jp')), true);
-  eq('havuzda xx yok', flags.includes(T.ccToName('xx')), false);
+  const html = T.phoneListHtml({ phones: ['05321112233'], emails: [] });
+  eq('bayrak CDN\u0027den çekilir', html.includes('src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/1f1f9-1f1f7.svg"'), true);
+  eq('numara çipte kopyalanır', html.includes('data-copy="05321112233"'), true);
+  const mail = T.phoneListHtml({ phones: [], emails: ['a@b.c'] });
+  eq('numarasız kişi e-postayı gösterir', mail.includes('data-copy="a@b.c"'), true);
+  eq('e-postada bayrak yok', mail.includes('class="flag"'), false);
 }
 
 console.log('\n[16] vcardFor NOTE ülke gömme + geri okuma');
@@ -222,13 +222,46 @@ console.log('\n[16] vcardFor NOTE ülke gömme + geri okuma');
   eq('X-ABNOTE-COUNTRY=DE okundu', people[0].noteCountry, 'de');
 }
 
-console.log('\n[17] richText — emoji bayrak render\u0131');
+console.log('\n[17] richText — TÜM emojiler Twemoji SVG (CDN)');
 {
-  const flagImgRe = /<img class="flag" src="assets\/twemoji\/1f1f9-1f1f7\.svg"/;
-  eq('🇹🇷 SVG\u0027ye dönüşer', flagImgRe.test(T.richText('Ahmet \u{1F1F9}\u{1F1F7}')), true);
-  eq('bayraksız isim bozulmaz', T.richText('Ayşe <Demir>'), 'Ayşe &lt;Demir&gt;');
-  eq('bilinmeyen çift metin kalır', T.richText('\u{1F1FD}\u{1F1FF}'), '\u{1F1FD}\u{1F1FF}');
+  eq('🇹🇷 CDN SVG\u0027ye dönüşer', T.richText('Ahmet \u{1F1F9}\u{1F1F7}').includes('src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/1f1f9-1f1f7.svg"'), true);
+  eq('kalp emojisi de görselleşir (FE0F atlanır)', T.richText('\u{2764}\u{FE0F}').includes('/2764.svg'), true);
+  eq('ten renkli emoji tek grup', T.richText('\u{1F44D}\u{1F3FD}').includes('/1f44d-1f3fd.svg'), true);
+  eq('emoji olmayan isim bozulmaz', T.richText('Ayşe <Demir>'), 'Ayşe &lt;Demir&gt;');
   eq('XSS denemesi zararsız', T.richText('<img src=x onerror=alert(1)>').includes('<img src=x'), false);
+}
+
+console.log('\n[18] emojiFile & avatarHtml — emoji önizleme');
+eq('emojiFile bayrak', T.emojiFile('\u{1F1F9}\u{1F1F7}'), '1f1f9-1f1f7');
+eq('emojiFile FE0F atlar', T.emojiFile('\u{2764}\u{FE0F}'), '2764');
+eq('emojiFile ZWJ zinciri', T.emojiFile('\u{1F468}\u{200D}\u{1F469}\u{200D}\u{1F467}'), '1f468-200d-1f469-200d-1f467');
+{
+  eq('isim tamamen emojisyse görselli avatar', T.avatarHtml({ name: '\u{1F600}' }).includes('https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/1f600.svg'), true);
+  eq('emoji avatarı bozuk metin içermez', T.avatarHtml({ name: '\u{1F600}' }).includes('style="background:'), false);
+  eq('emoji + isim → baş harfler (emoji atlanır)', T.avatarHtml({ name: '\u{1F1F9}\u{1F1F7} Ahmet' }).includes('>AH<'), true);
+  eq('normal isim renkli avatar', T.avatarHtml({ name: 'Ayşe' }).includes('style="background:#'), true);
+}
+
+console.log('\n[19] i18n sözlük tutarlılığı (TR/EN aynı anahtarlar)');
+{
+  const Lm = code.match(/const L = \{[\s\S]*?\n\};/);
+  if (!Lm) { eq('L sözlüğü bulunamadı', false, true); }
+  else {
+    const getKeys = lang => {
+      const re = new RegExp('\\b' + lang + ':\\s*\\{([\\s\\S]*?)\\n  \\},?\\n', 'm');
+      const body = re.exec(Lm[0])?.[1] || '';
+      return new Set([...body.matchAll(/'([a-z]+\.[A-Za-z0-9.]+)'\s*:/g)].map(m2 => m2[1]));
+    };
+    const tr = getKeys('tr'), en = getKeys('en');
+    const missingEn = [...tr].filter(k => !en.has(k));
+    const missingTr = [...en].filter(k => !tr.has(k));
+    eq('EN sözlüğü eksiksiz', missingEn.length, 0);
+    eq('TR sözlüğü eksiksiz', missingTr.length, 0);
+    if (missingEn.length) console.log('   EN eksik:', missingEn.join(', '));
+    if (missingTr.length) console.log('   TR eksik:', missingTr.join(', '));
+    eq('yardım bölüm mevcut', tr.has('help.priv'), true);
+    eq('drop anahtarı mevcut', tr.has('drop.hint'), true);
+  }
 }
 
 console.log(`\n SONUÇ: ${pass} geçti, ${fail} kaldı`);

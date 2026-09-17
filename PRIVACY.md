@@ -1,14 +1,15 @@
 # Gizlilik
 
-**VCF Kişi Yöneticisi** kişisel verilerinizi korumak için tasarlandı. Bu belge, uygulamanın veri davranışını açıkça ortaya koyar.
+**vCard Tool** kişisel verilerinizi korumak için tasarlandı. Bu belge, uygulamanın veri davranışını açıkça ortaya koyar.
 
 ## Kısa özet
 
 - ❌ Sunucu yok, veritabanı yok
 - ❌ Analitik, izleme, günlükleme (logging) yok
 - ❌ Çerez yok, localStorage/sessionStorage kullanımı yok
-- ❌ Harici CDN, harici script, harici font yok
-- ✅ Bayrak görselleri (Twemoji) dahi repoya gömülüdür — görseller kendi sitemizden yüklenir
+- ❌ Analitik, izleme, günlükleme (logging) yok
+- ❌ Çerez yok, localStorage/sessionStorage kullanımı yok
+- ⚠️ Tek dış kaynak: Twemoji SVG görselleri jsDelivr CDN'inden **resim olarak** indirilir (aşağıda ayrıntı)
 - ✅ Kişileriniz yalnızca tarayıcı sekmenizde, bellekte işlenir
 - ✅ Sekmeyi kapattığınız anda her şey tamamen silinir
 
@@ -34,10 +35,14 @@
   GitHub'ın statik dosya sunucusu içerik günlüğü (access log) tutmaz.
 - **Kod denetlenebilir:** Tüm uygulama tek bir `index.html` dosyasıdır. Kaynağı görüntüleyerek
   ne yaptığını herkes doğrulayabilir.
-- **Bayrak görselleri:** Numara ülkesinden otomatik gösterilen bayraklar Twemoji projesinden
-  (CC-BY 4.0) alınmış ve **repoya gömülüdür** (`assets/twemoji/`). Çalışma zamanında
-  `cdn.jsdelivr.net` gibi hiçbir üçüncü taraf sunucuya istek yapılmaz — CSP bunu da engeller
-  (`img-src 'self'`).
+- **Emoji/bayrak görselleri (dürüst istisna):** Bayraklar numaranın yanında, isimlerdeki tüm
+  emojiler ise Twemoji SVG olarak çizilir (Windows/ChromeOS bunları çizemez). Görseller
+  çalışma zamanında `https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/…`
+  adresinden **resim olarak** indirilir (Twemoji, CC-BY 4.0 — © Twitter, Inc and other
+  contributors). Bu istekler **yalnızca görsel dosya adı** içerir; isim, numara, e-posta gibi
+  hiçbir kişi verisi CDN'e gitmez. CSP bunu tekilleştirir: `img-src 'self' data:
+  https://cdn.jsdelivr.net` — başka hiçbir dış kaynaktan içerik yüklenemez.
+  `connect-src 'none'` devam eder: sayfa yine hiçbir veri **gönderemez**.
 
 ## Bilinen istisnalar (dürüstlük gereği)
 
@@ -53,4 +58,4 @@
 ## Değişiklikler
 
 Bu belge uygulamada gizlilikle ilgili bir değişiklik olduğunda güncellenir.
-Son güncelleme: 2026-09-16
+Son güncelleme: 2026-09-16 (Twemoji CDN'e geçiş)

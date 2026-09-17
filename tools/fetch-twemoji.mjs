@@ -1,3 +1,7 @@
+// [KULLANIMDIŞI] Uygulama artık emojileri çalışma zamanında doğrudan CDN'den çekiyor:
+// https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/<dosya>.svg
+// (index.html içindeki TWEMOJI_CDN sabiti). Bu script yalnızca gömülü SVG istenirse kullanılır.
+//
 // Twemoji bayrak SVG'lerini indirip assets/twemoji/ içine yerleştirir.
 // Çalıştırma: node tools/fetch-twemoji.mjs
 // Kaynak: twemoji v14.0.2 (Twitter) GitHub deposu — lisans: CC-BY 4.0
