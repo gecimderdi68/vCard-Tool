@@ -1,4 +1,4 @@
-# vCard Tool
+# vCard Tool (ai code)
 
 Telefonundan yedek aldığın **.vcf** kişi dosyalarını açan, isim + numaraları gösteren, **iki dosyayı karşılaştıran**, kopyaları **otomatik birleştiren** ve kişileri **düzenlemeye** izin veren modern & minimal uygulama.
 
