@@ -4,10 +4,6 @@ Telefonundan yedek aldığın **.vcf** kişi dosyalarını açan, isim + numaral
 
 > 🛡 **Gizlilik odaklı:** sunucu yok, veritabanı yok, çerez yok, analitik yok, günlük yok. Kişileriniz yalnızca tarayıcı sekmenizde işlenir, sekme kapanınca tamamen silinir. Emoji/bayrak görselleri tek istisna: CDN'den yalnızca **resim** olarak indirilir, kişi verisi hiçbir istekte yer almaz. Ayrıntılar: [PRIVACY.md](PRIVACY.md)
 
-## Çalıştırma
-
-Ekstra kurulum yok — `index.html` dosyasını çift tıklayıp tarayıcıda aç. Hepsi bu.
-
 > Not: Kişi verilerin hiçbir sunucuya gönderilmez. Emoji/bayrak görselleri internetten yüklendiği için ilk açılışta bağlantı gerekir; sonrasında tarayıcı önbelleğe alır.
 
 ## Özellikler
